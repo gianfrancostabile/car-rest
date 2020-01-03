@@ -7,12 +7,12 @@ import pl.pojo.tester.api.assertion.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CarDTOTest {
-    private CarDTO dummyCarDTO;
+public class CarRequestDTOTest {
+    private CarRequestDTO dummyCarRequestDTO;
 
     @BeforeEach
     public void setUp() {
-        this.dummyCarDTO = CarDTO.builder()
+        this.dummyCarRequestDTO = CarRequestDTO.builder()
             .internalCode("chev-corsa")
             .name("Corsa")
             .companyInternalCode("chevrolet")
@@ -21,7 +21,7 @@ public class CarDTOTest {
 
     @Test
     public void testPojo_AllTestShouldPass() {
-        Assertions.assertPojoMethodsFor(CarDTO.class)
+        Assertions.assertPojoMethodsFor(CarRequestDTO.class)
             .testing(Method.CONSTRUCTOR, Method.GETTER, Method.SETTER, Method.EQUALS, Method.HASH_CODE)
             .areWellImplemented();
     }
@@ -30,41 +30,41 @@ public class CarDTOTest {
     public void toString_WithoutNullValues_ReturnsStringRepresentationWithoutNullValues() {
         String expectedValue =
             "{\"internalCode\": \"chev-corsa\", \"name\": \"Corsa\", \"companyInternalCode\": \"chevrolet\"}";
-        assertEquals(expectedValue, this.dummyCarDTO.toString(),
+        assertEquals(expectedValue, this.dummyCarRequestDTO.toString(),
             "toString_WithoutNullValues_ReturnsStringRepresentationWithoutNullValues");
     }
 
     @Test
     public void toString_InternalCodeNull_ReturnsStringRepresentationWithInternalCodeNull() {
-        this.dummyCarDTO.setInternalCode(null);
+        this.dummyCarRequestDTO.setInternalCode(null);
         String expectedValue = "{\"internalCode\": null, \"name\": \"Corsa\", \"companyInternalCode\": \"chevrolet\"}";
-        assertEquals(expectedValue, this.dummyCarDTO.toString(),
+        assertEquals(expectedValue, this.dummyCarRequestDTO.toString(),
             "toString_InternalCodeNull_ReturnsStringRepresentationWithInternalCodeNull");
     }
 
     @Test
     public void toString_NameNull_ReturnsStringRepresentationWithNameNull() {
-        this.dummyCarDTO.setName(null);
+        this.dummyCarRequestDTO.setName(null);
         String expectedValue =
             "{\"internalCode\": \"chev-corsa\", \"name\": null, \"companyInternalCode\": \"chevrolet\"}";
-        assertEquals(expectedValue, this.dummyCarDTO.toString(),
+        assertEquals(expectedValue, this.dummyCarRequestDTO.toString(),
             "toString_NameNull_ReturnsStringRepresentationWithNameNull");
     }
 
     @Test
     public void toString_CompanyInternalCodeNull_ReturnsStringRepresentationWithCompanyInternalCodeNull() {
-        this.dummyCarDTO.setCompanyInternalCode(null);
+        this.dummyCarRequestDTO.setCompanyInternalCode(null);
         String expectedValue = "{\"internalCode\": \"chev-corsa\", \"name\": \"Corsa\", \"companyInternalCode\": null}";
-        assertEquals(expectedValue, this.dummyCarDTO.toString(),
+        assertEquals(expectedValue, this.dummyCarRequestDTO.toString(),
             "toString_CompanyInternalCodeNull_ReturnsStringRepresentationWithCompanyInternalCodeNull");
     }
 
     @Test
     public void toString_AllFieldsNull_ReturnsStringRepresentationWithAllFieldsNull() {
-        CarDTO dummyCarDTO = CarDTO.builder()
+        CarRequestDTO dummyCarRequestDTO = CarRequestDTO.builder()
             .build();
         String expectedValue = "{\"internalCode\": null, \"name\": null, \"companyInternalCode\": null}";
-        assertEquals(expectedValue, dummyCarDTO.toString(),
+        assertEquals(expectedValue, dummyCarRequestDTO.toString(),
             "toString_AllFieldsNull_ReturnsStringRepresentationWithAllFieldsNull");
     }
 }

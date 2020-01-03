@@ -2,7 +2,10 @@ package com.gfstabile.java.carrest.controller;
 
 import com.gfstabile.java.carrest.entity.ValidationErrorCollection;
 import com.gfstabile.java.carrest.entity.car.Car;
-import com.gfstabile.java.carrest.entity.car.CarDTO;
+import com.gfstabile.java.carrest.entity.car.CarRequestDTO;
+import com.gfstabile.java.carrest.entity.car.CarResponseDTO;
+import com.gfstabile.java.carrest.entity.category.CategoryDTO;
+import com.gfstabile.java.carrest.entity.company.CompanyDTO;
 import com.gfstabile.java.carrest.exception.impl.car.CarAlreadyExistsException;
 import com.gfstabile.java.carrest.exception.impl.car.CarNotFoundException;
 import com.gfstabile.java.carrest.mapper.CarMapper;
@@ -54,17 +57,24 @@ public class CarControllerTest {
     @Autowired
     private CarController carController;
 
-    private CarDTO dummyCarDTO;
     private Car dummyCar;
+    private CarRequestDTO dummyCarRequestDTO;
+    private CarResponseDTO dummyCarResponseDTO;
+    private CarResponseDTO dummyCarResponseDTOWithoutCompany;
+    private CompanyDTO dummyCompanyDTO;
     private ValidationErrorCollection errorCollection;
 
     @BeforeEach
     public void setUp() {
         this.errorCollection = new ValidationErrorCollection();
-        this.dummyCarDTO = CarDTO.builder()
-            .internalCode("chev-corsa")
-            .name("Corsa")
-            .companyInternalCode("chevrolet")
+        this.dummyCompanyDTO = CompanyDTO.builder()
+            .internalCode("1")
+            .name("Name")
+            .country("AR")
+            .categoryDTO(CategoryDTO.builder()
+                .internalCode("1")
+                .name("Name")
+                .build())
             .build();
         this.dummyCar = Car.builder()
             .id(0L)
@@ -72,9 +82,24 @@ public class CarControllerTest {
             .name("Corsa")
             .companyInternalCode("chevrolet")
             .build();
+        this.dummyCarRequestDTO = CarRequestDTO.builder()
+            .internalCode("chev-corsa")
+            .name("Corsa")
+            .companyInternalCode("chevrolet")
+            .build();
+        this.dummyCarResponseDTO = CarResponseDTO.builder()
+            .internalCode("chev-corsa")
+            .name("Corsa")
+            .companyDTO(this.dummyCompanyDTO)
+            .build();
+        this.dummyCarResponseDTOWithoutCompany = CarResponseDTO.builder()
+            .internalCode("chev-corsa")
+            .name("Corsa")
+            .build();
 
-        when(this.carMapper.fromDtoToEntity(any(CarDTO.class))).thenReturn(this.dummyCar);
-        when(this.carMapper.fromEntityToDto(any(Car.class))).thenReturn(this.dummyCarDTO);
+        when(this.carMapper.fromDtoToEntity(any(CarRequestDTO.class))).thenReturn(this.dummyCar);
+        when(this.carMapper.fromEntityToRequestDto(any(Car.class))).thenReturn(this.dummyCarRequestDTO);
+        when(this.carMapper.fromEntityToResponseDto(any(Car.class))).thenReturn(this.dummyCarResponseDTOWithoutCompany);
     }
 
     @Test
@@ -84,7 +109,7 @@ public class CarControllerTest {
             .save(any(Car.class));
 
         this.mockMvc.perform(post(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isCreated());
     }
 
@@ -101,9 +126,9 @@ public class CarControllerTest {
     public void save_SendInvalidCar_InternalCodeNull_Returns400StatusCodeWithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_INTERNAL_CODE_BLANK);
 
-        this.dummyCarDTO.setInternalCode(null);
+        this.dummyCarRequestDTO.setInternalCode(null);
         this.mockMvc.perform(post(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -112,9 +137,9 @@ public class CarControllerTest {
     public void save_SendInvalidCar_InternalCodeBlank_Returns400StatusCodeWithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_INTERNAL_CODE_BLANK);
 
-        this.dummyCarDTO.setInternalCode("");
+        this.dummyCarRequestDTO.setInternalCode("");
         this.mockMvc.perform(post(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -123,9 +148,9 @@ public class CarControllerTest {
     public void save_SendInvalidCar_NameNull_Returns400StatusCodeWithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_NAME_BLANK);
 
-        this.dummyCarDTO.setName(null);
+        this.dummyCarRequestDTO.setName(null);
         this.mockMvc.perform(post(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -134,9 +159,9 @@ public class CarControllerTest {
     public void save_SendInvalidCar_NameBlank_Returns400StatusCodeWithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_NAME_BLANK);
 
-        this.dummyCarDTO.setName("");
+        this.dummyCarRequestDTO.setName("");
         this.mockMvc.perform(post(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -145,9 +170,9 @@ public class CarControllerTest {
     public void save_SendInvalidCar_CompanyInternalCodeNull_Returns400StatusCodeWithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_COMPANY_INTERNAL_CODE_BLANK);
 
-        this.dummyCarDTO.setCompanyInternalCode(null);
+        this.dummyCarRequestDTO.setCompanyInternalCode(null);
         this.mockMvc.perform(post(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -156,16 +181,16 @@ public class CarControllerTest {
     public void save_SendInvalidCar_CompanyInternalCodeBlank_Returns400StatusCodeWithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_COMPANY_INTERNAL_CODE_BLANK);
 
-        this.dummyCarDTO.setCompanyInternalCode("");
+        this.dummyCarRequestDTO.setCompanyInternalCode("");
         this.mockMvc.perform(post(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
 
     @Test
     public void save_SendCarButInternalCodeAlreadyExists_Returns400StatusCodeWithErrorMessage() throws Exception {
-        this.dummyCarDTO.setInternalCode("invalid-code");
+        this.dummyCarRequestDTO.setInternalCode("invalid-code");
         this.dummyCar.setInternalCode("invalid-code");
         when(this.requestAPIService.isValidCompanyInternalCode(anyString())).thenReturn(true);
         doThrow(CarAlreadyExistsException.class).when(this.carService)
@@ -174,20 +199,20 @@ public class CarControllerTest {
         errorCollection.addError(ErrorMessage.CAR_ALREADY_EXISTS);
 
         this.mockMvc.perform(post(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
 
     @Test
     public void save_SendCarButCompanyInternalCodeDoNotExists_Returns400StatusCodeWithErrorMessage() throws Exception {
-        this.dummyCarDTO.setCompanyInternalCode("invalid-code");
+        this.dummyCarRequestDTO.setCompanyInternalCode("invalid-code");
         when(this.requestAPIService.isValidCompanyInternalCode(anyString())).thenReturn(false);
 
         errorCollection.addError(ErrorMessage.COMPANY_INTERNAL_CODE_DO_NOT_EXISTS);
 
         this.mockMvc.perform(post(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -199,7 +224,7 @@ public class CarControllerTest {
             .update(any(Car.class));
 
         this.mockMvc.perform(put(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isNoContent());
     }
 
@@ -216,9 +241,9 @@ public class CarControllerTest {
     public void update_SendInvalidCar_InternalCodeNull_Returns400WithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_INTERNAL_CODE_BLANK);
 
-        this.dummyCarDTO.setInternalCode(null);
+        this.dummyCarRequestDTO.setInternalCode(null);
         this.mockMvc.perform(put(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -227,9 +252,9 @@ public class CarControllerTest {
     public void update_SendInvalidCar_InternalCodeBlank_Returns400WithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_INTERNAL_CODE_BLANK);
 
-        this.dummyCarDTO.setInternalCode("");
+        this.dummyCarRequestDTO.setInternalCode("");
         this.mockMvc.perform(put(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -238,9 +263,9 @@ public class CarControllerTest {
     public void update_SendInvalidCar_NameNull_Returns400WithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_NAME_BLANK);
 
-        this.dummyCarDTO.setName(null);
+        this.dummyCarRequestDTO.setName(null);
         this.mockMvc.perform(put(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -249,9 +274,9 @@ public class CarControllerTest {
     public void update_SendInvalidCar_NameBlank_Returns400WithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_NAME_BLANK);
 
-        this.dummyCarDTO.setName("");
+        this.dummyCarRequestDTO.setName("");
         this.mockMvc.perform(put(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -260,9 +285,9 @@ public class CarControllerTest {
     public void update_SendInvalidCar_CompanyInternalCodeNull_Returns400WithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_COMPANY_INTERNAL_CODE_BLANK);
 
-        this.dummyCarDTO.setCompanyInternalCode(null);
+        this.dummyCarRequestDTO.setCompanyInternalCode(null);
         this.mockMvc.perform(put(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -271,16 +296,16 @@ public class CarControllerTest {
     public void update_SendInvalidCar_CompanyInternalCodeBlank_Returns400WithErrorMessage() throws Exception {
         errorCollection.addError(ErrorMessage.CAR_COMPANY_INTERNAL_CODE_BLANK);
 
-        this.dummyCarDTO.setCompanyInternalCode("");
+        this.dummyCarRequestDTO.setCompanyInternalCode("");
         this.mockMvc.perform(put(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
 
     @Test
     public void update_SendNonExistingCar_Returns400WithErrorMessage() throws Exception {
-        this.dummyCarDTO.setInternalCode("invalid-code");
+        this.dummyCarRequestDTO.setInternalCode("invalid-code");
         this.dummyCar.setInternalCode("invalid-code");
         when(this.requestAPIService.isValidCompanyInternalCode(anyString())).thenReturn(true);
         doThrow(CarNotFoundException.class).when(this.carService)
@@ -289,20 +314,20 @@ public class CarControllerTest {
         errorCollection.addError(ErrorMessage.CAR_NOT_FOUND);
 
         this.mockMvc.perform(put(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
 
     @Test
     public void update_SendValidCarButCompanyInternalCodeDoNotExists_Returns400WithErrorMessage() throws Exception {
-        this.dummyCarDTO.setCompanyInternalCode("invalid-code");
+        this.dummyCarRequestDTO.setCompanyInternalCode("invalid-code");
         when(this.requestAPIService.isValidCompanyInternalCode(anyString())).thenReturn(false);
 
         errorCollection.addError(ErrorMessage.COMPANY_INTERNAL_CODE_DO_NOT_EXISTS);
 
         this.mockMvc.perform(put(URI_PREFIX).contentType(MediaType.APPLICATION_JSON_VALUE)
-            .content(this.dummyCarDTO.toString()))
+            .content(this.dummyCarRequestDTO.toString()))
             .andExpect(status().isBadRequest())
             .andExpect(content().json(errorCollection.toString()));
     }
@@ -350,9 +375,21 @@ public class CarControllerTest {
     @Test
     public void findByInternalCode_SendExistingInternalCode_Returns200StatusCodeWithCar() throws Exception {
         when(this.carService.findByInternalCode(anyString())).thenReturn(Optional.of(this.dummyCar));
+        when(this.requestAPIService.findCompanyDTO(anyString())).thenReturn(Optional.of(this.dummyCompanyDTO));
+        when(this.carMapper.fromEntityToResponseDto(this.dummyCar)).thenReturn(this.dummyCarResponseDTO);
         this.mockMvc.perform(get(URI_PREFIX_INTERNAL_CODE, "chev-corsa"))
             .andExpect(status().isOk())
-            .andExpect(content().json(this.dummyCarDTO.toString()));
+            .andExpect(content().json(this.dummyCarResponseDTO.toString()));
+    }
+
+    @Test
+    public void findByInternalCode_SendExistingInternalCodeButNonExistingCompany_Returns204StatusCodeWithCar()
+        throws Exception {
+        when(this.carService.findByInternalCode(anyString())).thenReturn(Optional.of(this.dummyCar));
+        when(this.requestAPIService.findCompanyDTO(anyString())).thenReturn(Optional.empty());
+        when(this.carMapper.fromEntityToResponseDto(this.dummyCar)).thenReturn(this.dummyCarResponseDTO);
+        this.mockMvc.perform(get(URI_PREFIX_INTERNAL_CODE, "chev-corsa-2"))
+            .andExpect(status().isNoContent());
     }
 
     @Test
@@ -383,20 +420,20 @@ public class CarControllerTest {
             .companyInternalCode("1")
             .build();
 
-        CarDTO carDTOOne = CarDTO.builder()
+        CarResponseDTO carResponseDTOOne = CarResponseDTO.builder()
             .internalCode("car-1")
             .name("car-one")
-            .companyInternalCode("1")
+            .companyDTO(this.dummyCompanyDTO)
             .build();
-        CarDTO carDTOTwo = CarDTO.builder()
+        CarResponseDTO carResponseDTOTwo = CarResponseDTO.builder()
             .internalCode("car-2")
             .name("car-two")
-            .companyInternalCode("1")
+            .companyDTO(this.dummyCompanyDTO)
             .build();
-        CarDTO carDTOThree = CarDTO.builder()
+        CarResponseDTO carResponseDTOThree = CarResponseDTO.builder()
             .internalCode("car-3")
             .name("car-three")
-            .companyInternalCode("1")
+            .companyDTO(this.dummyCompanyDTO)
             .build();
 
         List<Car> dummyCarList = new ArrayList<>();
@@ -404,57 +441,94 @@ public class CarControllerTest {
         dummyCarList.add(carTwo);
         dummyCarList.add(carThree);
 
-        List<CarDTO> expectedCarDTOList = new ArrayList<>();
-        expectedCarDTOList.add(carDTOOne);
-        expectedCarDTOList.add(carDTOTwo);
-        expectedCarDTOList.add(carDTOThree);
-
-        when(this.carMapper.fromEntityToDto(carOne)).thenReturn(carDTOOne);
-        when(this.carMapper.fromEntityToDto(carTwo)).thenReturn(carDTOTwo);
-        when(this.carMapper.fromEntityToDto(carThree)).thenReturn(carDTOThree);
+        List<CarResponseDTO> expectedCarResponseDTOList = new ArrayList<>();
+        expectedCarResponseDTOList.add(carResponseDTOOne);
+        expectedCarResponseDTOList.add(carResponseDTOTwo);
+        expectedCarResponseDTOList.add(carResponseDTOThree);
 
         when(this.carService.findAll()).thenReturn(Optional.of(dummyCarList));
+        when(this.requestAPIService.findCompanyDTO("1")).thenReturn(Optional.of(this.dummyCompanyDTO));
+
+        when(this.carMapper.fromEntityToResponseDto(carOne)).thenReturn(carResponseDTOOne);
+        when(this.carMapper.fromEntityToResponseDto(carTwo)).thenReturn(carResponseDTOTwo);
+        when(this.carMapper.fromEntityToResponseDto(carThree)).thenReturn(carResponseDTOThree);
 
         this.mockMvc.perform(get(URI_PREFIX))
             .andExpect(status().isOk())
-            .andExpect(content().json(expectedCarDTOList.toString()));
+            .andExpect(content().json(expectedCarResponseDTOList.toString()));
     }
 
     @Test
     public void findAll_ServiceFindAllReturnsOptionalWithList_Returns200StatusCodeWithOneCar() throws Exception {
-        List<Car> dummyCarList = new ArrayList<>();
-        dummyCarList.add(this.dummyCar);
+        Car carOne = Car.builder()
+            .id(0L)
+            .internalCode("car-1")
+            .name("car-one")
+            .companyInternalCode("1")
+            .build();
 
-        List<CarDTO> expectedCarDTOList = new ArrayList<>();
-        expectedCarDTOList.add(this.dummyCarDTO);
+        CarResponseDTO carResponseDTOOne = CarResponseDTO.builder()
+            .internalCode("car-1")
+            .name("car-one")
+            .companyDTO(this.dummyCompanyDTO)
+            .build();
+
+        List<Car> dummyCarList = new ArrayList<>();
+        dummyCarList.add(carOne);
+
+        List<CarResponseDTO> expectedCarResponseDTOList = new ArrayList<>();
+        expectedCarResponseDTOList.add(carResponseDTOOne);
 
         when(this.carService.findAll()).thenReturn(Optional.of(dummyCarList));
+        when(this.requestAPIService.findCompanyDTO("1")).thenReturn(Optional.of(this.dummyCompanyDTO));
+        when(this.carMapper.fromEntityToResponseDto(carOne)).thenReturn(carResponseDTOOne);
 
         this.mockMvc.perform(get(URI_PREFIX))
             .andExpect(status().isOk())
-            .andExpect(content().json(expectedCarDTOList.toString()));
+            .andExpect(content().json(expectedCarResponseDTOList.toString()));
+    }
+
+    @Test
+    public void findAll_ServiceFindAllReturnsOptionalWithListButCompanyDoNotExists_Returns204StatusCodeWithoutCars()
+        throws Exception {
+        Car carOne = Car.builder()
+            .id(0L)
+            .internalCode("car-1")
+            .name("car-one")
+            .companyInternalCode("invalid-code")
+            .build();
+
+        List<Car> dummyCarList = new ArrayList<>();
+        dummyCarList.add(carOne);
+
+        when(this.carService.findAll()).thenReturn(Optional.of(dummyCarList));
+        when(this.requestAPIService.findCompanyDTO("invalid-code")).thenReturn(Optional.empty());
+
+        this.mockMvc.perform(get(URI_PREFIX))
+            .andExpect(status().isNoContent())
+            .andExpect(content().json(new ArrayList<>().toString()));
     }
 
     @Test
     public void findAll_ServiceFindAllReturnsOptionalWithList_Returns204StatusCodeWithoutCars() throws Exception {
         List<Car> dummyCarList = new ArrayList<>();
-        List<CarDTO> expectedCarDTOList = new ArrayList<>();
+        List<CarResponseDTO> expectedCarResponseDTOList = new ArrayList<>();
 
         when(this.carService.findAll()).thenReturn(Optional.of(dummyCarList));
 
         this.mockMvc.perform(get(URI_PREFIX))
             .andExpect(status().isNoContent())
-            .andExpect(content().json(expectedCarDTOList.toString()));
+            .andExpect(content().json(expectedCarResponseDTOList.toString()));
     }
 
     @Test
     public void findAll_ServiceFindAllReturnsEmptyOptional_Returns204StatusCodeWithoutCars() throws Exception {
-        List<CarDTO> expectedCarDTOList = new ArrayList<>();
+        List<CarResponseDTO> expectedCarResponseDTOList = new ArrayList<>();
 
         when(this.carService.findAll()).thenReturn(Optional.empty());
 
         this.mockMvc.perform(get(URI_PREFIX))
             .andExpect(status().isNoContent())
-            .andExpect(content().json(expectedCarDTOList.toString()));
+            .andExpect(content().json(expectedCarResponseDTOList.toString()));
     }
 }

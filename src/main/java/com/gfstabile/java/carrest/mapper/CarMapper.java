@@ -1,7 +1,8 @@
 package com.gfstabile.java.carrest.mapper;
 
 import com.gfstabile.java.carrest.entity.car.Car;
-import com.gfstabile.java.carrest.entity.car.CarDTO;
+import com.gfstabile.java.carrest.entity.car.CarRequestDTO;
+import com.gfstabile.java.carrest.entity.car.CarResponseDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -17,33 +18,51 @@ public class CarMapper {
      * Otherwise the Car instance.
      * </p>
      *
-     * @param carDTO the dto instance
+     * @param carRequestDTO the dto instance
      * @return the entity instance
      */
-    public Car fromDtoToEntity(CarDTO carDTO) {
-        return Objects.nonNull(carDTO) ? Car.builder()
-            .internalCode(carDTO.getInternalCode())
-            .name(carDTO.getName())
-            .companyInternalCode(carDTO.getCompanyInternalCode())
+    public Car fromDtoToEntity(CarRequestDTO carRequestDTO) {
+        return Objects.nonNull(carRequestDTO) ? Car.builder()
+            .internalCode(carRequestDTO.getInternalCode())
+            .name(carRequestDTO.getName())
+            .companyInternalCode(carRequestDTO.getCompanyInternalCode())
             .build() : null;
     }
 
     /**
-     * Converts the Entity instance into a DTO instance.
+     * Converts the Entity instance into a RequestDTO instance.
      * <p>
      * If the given Car instance is {@literal null},
      * <b>null</b> will be returned.
-     * Otherwise the CarDTO instance.
+     * Otherwise the CarRequestDTO instance.
      * </p>
      *
      * @param car the entity instance
-     * @return the dto instance
+     * @return the request dto instance
      */
-    public CarDTO fromEntityToDto(Car car) {
-        return Objects.nonNull(car) ? CarDTO.builder()
+    public CarRequestDTO fromEntityToRequestDto(Car car) {
+        return Objects.nonNull(car) ? CarRequestDTO.builder()
             .internalCode(car.getInternalCode())
             .name(car.getName())
             .companyInternalCode(car.getCompanyInternalCode())
+            .build() : null;
+    }
+
+    /**
+     * Converts the Entity instance into a ResponseDTO instance.
+     * <p>
+     * If the given Car instance is {@literal null},
+     * <b>null</b> will be returned.
+     * Otherwise the CarResponseDTO instance.
+     * </p>
+     *
+     * @param car the entity instance
+     * @return the response dto instance
+     */
+    public CarResponseDTO fromEntityToResponseDto(Car car) {
+        return Objects.nonNull(car) ? CarResponseDTO.builder()
+            .internalCode(car.getInternalCode())
+            .name(car.getName())
             .build() : null;
     }
 }

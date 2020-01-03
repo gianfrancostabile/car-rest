@@ -1,9 +1,7 @@
-package com.gfstabile.java.carrest.entity.company;
+package com.gfstabile.java.carrest.entity.category;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.gfstabile.java.carrest.entity.category.CategoryDTO;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,20 +10,17 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * Response body from the company-rest api.
+ * Field class of the response body from the company-rest api.
  *
  * @author G. F. Stabile
  */
 @Getter
 @Setter
 @Builder
-@JsonDeserialize(builder = CompanyDTO.CompanyDTOBuilder.class)
-public class CompanyDTO implements Serializable {
+@JsonDeserialize(builder = CategoryDTO.CategoryDTOBuilder.class)
+public class CategoryDTO implements Serializable {
     private String internalCode;
     private String name;
-    private String country;
-    @JsonProperty("category")
-    private CategoryDTO categoryDTO;
 
     @Override
     public String toString() {
@@ -46,17 +41,7 @@ public class CompanyDTO implements Serializable {
         } else {
             stringBuilder.append("null");
         }
-        stringBuilder.append(", \"country\": ");
-        if (Objects.nonNull(country)) {
-            stringBuilder.append(quotes)
-                .append(country)
-                .append(quotes);
-        } else {
-            stringBuilder.append("null");
-        }
-        stringBuilder.append(", \"category\": ")
-            .append(categoryDTO)
-            .append('}');
+        stringBuilder.append('}');
         return stringBuilder.toString();
     }
 
@@ -66,18 +51,17 @@ public class CompanyDTO implements Serializable {
             return true;
         if (object == null || getClass() != object.getClass())
             return false;
-        CompanyDTO that = (CompanyDTO) object;
-        return Objects.equals(internalCode, that.internalCode) && Objects.equals(name, that.name) &&
-            Objects.equals(country, that.country) && Objects.equals(categoryDTO, that.categoryDTO);
+        CategoryDTO that = (CategoryDTO) object;
+        return Objects.equals(internalCode, that.internalCode) && Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(internalCode, name, country, categoryDTO);
+        return Objects.hash(internalCode, name);
     }
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static class CompanyDTOBuilder {
+    public static class CategoryDTOBuilder {
 
     }
 }

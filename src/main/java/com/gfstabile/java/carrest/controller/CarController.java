@@ -2,7 +2,9 @@ package com.gfstabile.java.carrest.controller;
 
 import com.gfstabile.java.carrest.entity.ValidationErrorCollection;
 import com.gfstabile.java.carrest.entity.car.Car;
-import com.gfstabile.java.carrest.entity.car.CarDTO;
+import com.gfstabile.java.carrest.entity.car.CarRequestDTO;
+import com.gfstabile.java.carrest.entity.car.CarResponseDTO;
+import com.gfstabile.java.carrest.entity.company.CompanyDTO;
 import com.gfstabile.java.carrest.exception.AbstractServiceException;
 import com.gfstabile.java.carrest.mapper.CarMapper;
 import com.gfstabile.java.carrest.service.CarService;
@@ -26,6 +28,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -48,14 +51,14 @@ public class CarController {
     private RequestAPIService requestAPIService;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ValidationErrorCollection> save(@RequestBody @Valid CarDTO carDTO)
+    public ResponseEntity<ValidationErrorCollection> save(@RequestBody @Valid CarRequestDTO carRequestDTO)
         throws AbstractServiceException {
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
         ValidationErrorCollection errorCollection = null;
         boolean isValidCompanyInternalCode =
-            this.requestAPIService.isValidCompanyInternalCode(carDTO.getCompanyInternalCode());
+            this.requestAPIService.isValidCompanyInternalCode(carRequestDTO.getCompanyInternalCode());
         if (isValidCompanyInternalCode) {
-            this.carService.save(this.carMapper.fromDtoToEntity(carDTO));
+            this.carService.save(this.carMapper.fromDtoToEntity(carRequestDTO));
             httpStatus = HttpStatus.CREATED;
         } else {
             errorCollection = this.buildCompanyInternalCodeError();
@@ -64,14 +67,14 @@ public class CarController {
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ValidationErrorCollection> update(@RequestBody @Valid CarDTO carDTO)
+    public ResponseEntity<ValidationErrorCollection> update(@RequestBody @Valid CarRequestDTO carRequestDTO)
         throws AbstractServiceException {
         HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
         ValidationErrorCollection errorCollection = null;
         boolean isValidCompanyInternalCode =
-            this.requestAPIService.isValidCompanyInternalCode(carDTO.getCompanyInternalCode());
+            this.requestAPIService.isValidCompanyInternalCode(carRequestDTO.getCompanyInternalCode());
         if (isValidCompanyInternalCode) {
-            this.carService.update(this.carMapper.fromDtoToEntity(carDTO));
+            this.carService.update(this.carMapper.fromDtoToEntity(carRequestDTO));
             httpStatus = HttpStatus.NO_CONTENT;
         } else {
             errorCollection = this.buildCompanyInternalCodeError();
@@ -88,31 +91,71 @@ public class CarController {
 
     @GetMapping(value = "/{internalCode}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<CarDTO> findByInternalCode(@PathVariable @NotBlank String internalCode) {
+    public ResponseEntity<CarResponseDTO> findByInternalCode(@PathVariable @NotBlank String internalCode) {
+        ResponseEntity<CarResponseDTO> responseEntity = new ResponseEntity<>(HttpStatus.NO_CONTENT);
         Optional<Car> carOptional = this.carService.findByInternalCode(internalCode);
-        return carOptional.map(car -> new ResponseEntity<>(this.carMapper.fromEntityToDto(car), HttpStatus.OK))
-            .orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
+        if (carOptional.isPresent()) {
+            Optional<CarResponseDTO> optionalCarResponseDTO = this.buildCarResponseDTOFromEntity(carOptional.get());
+            if (optionalCarResponseDTO.isPresent()) {
+                responseEntity = new ResponseEntity<>(optionalCarResponseDTO.get(), HttpStatus.OK);
+            }
+        }
+        return responseEntity;
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<List<CarDTO>> findAll() {
+    public ResponseEntity<List<CarResponseDTO>> findAll() {
         HttpStatus httpStatus = HttpStatus.NO_CONTENT;
-        List<CarDTO> carDTOList = new ArrayList<>();
+        List<CarResponseDTO> carResponseDTOList = new ArrayList<>();
 
         Optional<List<Car>> optionalCarList = this.carService.findAll();
         if (optionalCarList.isPresent()) {
-            carDTOList.addAll(optionalCarList.get()
+            carResponseDTOList.addAll(optionalCarList.get()
                 .stream()
-                .map(this.carMapper::fromEntityToDto)
+                .map(this::buildCarResponseDTOFromEntity)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toList()));
-            if (!carDTOList.isEmpty()) {
+            if (!carResponseDTOList.isEmpty()) {
                 httpStatus = HttpStatus.OK;
             }
         }
-        return new ResponseEntity<>(carDTOList, httpStatus);
+        return new ResponseEntity<>(carResponseDTOList, httpStatus);
     }
 
+    /**
+     * Maps the given {@link Car} instance to {@link CarResponseDTO}.
+     * <p>
+     * Unlike {@link CarMapper} the CompanyDTO is required, for that
+     * the {@link RequestAPIService#findCompanyDTO(String)} is used.
+     * <br>
+     * If the car instance is null or the company internal code do not
+     * exists, an empty optional will be returned.
+     * </p>
+     *
+     * @param car the car instance
+     * @return an Optional with the {@link CarResponseDTO} instance.
+     */
+    private Optional<CarResponseDTO> buildCarResponseDTOFromEntity(Car car) {
+        CarResponseDTO carResponseDTO = null;
+        if (Objects.nonNull(car)) {
+            Optional<CompanyDTO> optionalCompanyDTO =
+                this.requestAPIService.findCompanyDTO(car.getCompanyInternalCode());
+            if (optionalCompanyDTO.isPresent()) {
+                carResponseDTO = this.carMapper.fromEntityToResponseDto(car);
+                carResponseDTO.setCompanyDTO(optionalCompanyDTO.get());
+            }
+        }
+        return Optional.ofNullable(carResponseDTO);
+    }
+
+    /**
+     * Returns a {@link ValidationErrorCollection} instance with
+     * {@link ErrorMessage#COMPANY_INTERNAL_CODE_DO_NOT_EXISTS} error message.
+     *
+     * @return a {@link ValidationErrorCollection} instance.
+     */
     private ValidationErrorCollection buildCompanyInternalCodeError() {
         ValidationErrorCollection validationErrorCollection = new ValidationErrorCollection();
         validationErrorCollection.addError(ErrorMessage.COMPANY_INTERNAL_CODE_DO_NOT_EXISTS);

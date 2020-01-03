@@ -8,18 +8,19 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
- * The DTO class related to Car entity class.
+ * The request DTO class related to Car entity class.
  *
  * @author G. F. Stabile
  */
 @Getter
 @Setter
 @Builder
-@JsonDeserialize(builder = CarDTO.CarDTOBuilder.class)
-public class CarDTO {
+@JsonDeserialize(builder = CarRequestDTO.CarRequestDTOBuilder.class)
+public class CarRequestDTO implements Serializable {
 
     @NotBlank(message = ErrorMessage.CAR_INTERNAL_CODE_BLANK)
     private String internalCode;
@@ -32,27 +33,28 @@ public class CarDTO {
 
     @Override
     public String toString() {
+        char quotes = '\"';
         final StringBuilder stringBuilder = new StringBuilder("{\"internalCode\": ");
         if (Objects.nonNull(this.internalCode)) {
-            stringBuilder.append('\"')
+            stringBuilder.append(quotes)
                 .append(this.internalCode)
-                .append('\"');
+                .append(quotes);
         } else {
             stringBuilder.append("null");
         }
         stringBuilder.append(", \"name\": ");
         if (Objects.nonNull(this.name)) {
-            stringBuilder.append('\"')
+            stringBuilder.append(quotes)
                 .append(this.name)
-                .append('\"');
+                .append(quotes);
         } else {
             stringBuilder.append("null");
         }
         stringBuilder.append(", \"companyInternalCode\": ");
         if (Objects.nonNull(this.companyInternalCode)) {
-            stringBuilder.append('\"')
+            stringBuilder.append(quotes)
                 .append(this.companyInternalCode)
-                .append('\"');
+                .append(quotes);
         } else {
             stringBuilder.append("null");
         }
@@ -66,9 +68,9 @@ public class CarDTO {
             return true;
         if (o == null || getClass() != o.getClass())
             return false;
-        CarDTO carDTO = (CarDTO) o;
-        return Objects.equals(internalCode, carDTO.internalCode) && Objects.equals(name, carDTO.name) &&
-            Objects.equals(companyInternalCode, carDTO.companyInternalCode);
+        CarRequestDTO carRequestDTO = (CarRequestDTO) o;
+        return Objects.equals(internalCode, carRequestDTO.internalCode) && Objects.equals(name, carRequestDTO.name) &&
+            Objects.equals(companyInternalCode, carRequestDTO.companyInternalCode);
     }
 
     @Override
@@ -77,7 +79,7 @@ public class CarDTO {
     }
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static class CarDTOBuilder {
+    public static class CarRequestDTOBuilder {
 
     }
 }
